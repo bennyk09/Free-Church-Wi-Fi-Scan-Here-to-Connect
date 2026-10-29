@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wi-Fi Login Portal | Church Wi-Fi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      position: relative;
+      overflow-x: hidden;
+      transition: background 1.5s ease;
+    }
+
+    body.holy-mode {
+      background: radial-gradient(circle at center, #261608 0%, #0d0804 100%);
+    }
+
+    #fxCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 2s ease;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Modern Portal Card */
+    .portal-card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .portal-header {
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      text-align: center;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      background: #eff6ff;
+      border-radius: 10px;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+
+    .portal-header h1 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .portal-header p {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .network-badge-box {
+      margin: 18px 24px 0;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .net-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .net-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      background: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+    }
+
+    .portal-body {
+      padding: 20px 24px 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .terms-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 18px;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    .terms-row input {
+      margin-top: 2px;
+      accent-color: #2563eb;
+    }
+
+    .btn-connect {
+      width: 100%;
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-connect:hover {
+      background: #1d4ed8;
+    }
+
+    /* Simulation Loading State */
+    .connection-status {
+      display: none;
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 38px;
+      height: 38px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 12px;
+    }
+
+    .bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      width: 0%;
+      height: 100%;
+      background: #2563eb;
+      transition: width 0.4s ease;
+    }
+
+    /* Biblical Parchment View */
+    .biblical-parchment {
+      display: none;
+      position: relative;
+      background: #fdf6e2;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.7) 0%, rgba(228, 203, 155, 0.5) 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+      border: 3px double #854d0e;
+      outline: 10px solid #fef3c7;
+      border-radius: 4px;
+      padding: 34px 22px 28px;
+      box-shadow: 
+        0 0 0 1px #78350f,
+        0 15px 40px rgba(0, 0, 0, 0.7),
+        0 0 70px rgba(234, 179, 8, 0.4);
+      color: #261706;
+      text-align: center;
+      animation: scrollAppear 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+
+    @keyframes scrollAppear {
+      0% { transform: scale(0.8) rotate(-1deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .biblical-parchment::before,
+    .biblical-parchment::after {
+      content: "✦";
+      position: absolute;
+      font-size: 18px;
+      color: #b45309;
+    }
+    .biblical-parchment::before { top: 8px; left: 10px; }
+    .biblical-parchment::after { bottom: 8px; right: 10px; }
+
+    .cross-emblem {
+      font-size: 32px;
+      color: #b45309;
+      line-height: 1;
+      margin-bottom: 6px;
+      text-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+    }
+
+    .epistle-title {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #78350f;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    /* Huge Punchline Heading */
+    .main-decree {
+      font-family: 'Cinzel', serif;
+      font-size: 27px;
+      font-weight: 900;
+      line-height: 1.25;
+      color: #451a03;
+      margin-bottom: 16px;
+      border-top: 2px solid #b45309;
+      border-bottom: 2px solid #b45309;
+      padding: 12px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Smaller Subtext Verse */
+    .scripture-verse {
+      font-family: 'IM Fell English', serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #451a03;
+      font-style: italic;
+      text-align: center;
+      margin: 0 auto 20px;
+      max-width: 90%;
+    }
+
+    .biblical-seal-box {
+      background: rgba(254, 243, 199, 0.65);
+      border: 1px dashed #b45309;
+      border-radius: 4px;
+      padding: 12px 14px;
+      margin-bottom: 22px;
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      color: #78350f;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .seal-item b {
+      display: block;
+      color: #451a03;
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-repent {
+      background: linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%);
+      color: #fef3c7;
+      border: 1px solid #fde047;
+      font-family: 'Cinzel', serif;
+      padding: 13px 30px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(127, 29, 29, 0.5);
+      transition: all 0.2s;
+    }
+
+    .btn-repent:hover {
+      background: linear-gradient(180deg, #b91c1c 0%, #991b1b 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(185, 28, 28, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="fxCanvas"></canvas>
+
+  <div class="container">
+    <!-- Modern Captive Portal -->
+    <div class="portal-card" id="portalCard">
+      <div id="formView">
+        <div class="portal-header">
+          <div class="brand-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+              <line x1="12" y1="20" x2="12.01" y2="20"></line>
+            </svg>
+          </div>
+          <h1>Guest Wi-Fi Sign-In</h1>
+          <p>Please enter your name to connect to church internet.</p>
+        </div>
+
+        <div class="network-badge-box">
+          <span class="net-name">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
+            </svg>
+            Church Wi-Fi
+          </span>
+          <span class="net-status">
+            <span class="pulse-dot"></span> Online (99%)
+          </span>
+        </div>
+
+        <form class="portal-body" onsubmit="handleFormSubmit(event)">
+          <div class="form-group">
+            <label for="userName">Your Name</label>
+            <input type="text" id="userName" placeholder="Enter your full name" required autocomplete="name" />
+          </div>
+
+          <div class="terms-row">
+            <input type="checkbox" id="termsCheck" checked required />
+            <label for="termsCheck" style="margin:0; cursor:pointer;">
+              I agree to the sanctuary guest internet terms.
+            </label>
+          </div>
+
+          <button type="submit" class="btn-connect">Connect to Church Wi-Fi</button>
+        </form>
+      </div>
+
+      <!-- Simulation Loading Screen -->
+      <div id="loadingView" class="connection-status">
+        <div class="spinner"></div>
+        <div class="status-text" id="statusMessage">Checking connection...</div>
+        <div class="bar-bg">
+          <div class="bar-fill" id="barFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Biblical Reveal Scroll -->
+    <div class="biblical-parchment" id="biblicalParchment">
+      <div class="cross-emblem">☩</div>
+      <div class="epistle-title" id="scrollHeading">MESSAGE FOR YOU</div>
+      
+      <h2 class="main-decree">THE ONLY CONNECTION YOU NEED IS GOD</h2>
+      
+      <p class="scripture-verse" id="customVerseBody">
+        Put your phone down, be still, and focus on God today.
+      </p>
+
+      <div class="biblical-seal-box">
+        <div class="seal-item">
+          <b>BANDWIDTH:</b>
+          Unlimited Grace
+        </div>
+        <div class="seal-item">
+          <b>LATENCY:</b>
+          0.0 ms (Instant Prayer)
+        </div>
+        <div class="seal-item">
+          <b>ACCESS:</b>
+          Always Available
+        </div>
+        <div class="seal-item">
+          <b>PROTECTION:</b>
+          Psalm 91
+        </div>
+      </div>
+
+      <button class="btn-repent" onclick="shoutAmen()">AMEN &bull; PUT DOWN PHONE</button>
+    </div>
+  </div>
+
+  <script>
+    let victimName = "";
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const rawName = document.getElementById("userName").value.trim();
+      victimName = rawName || "Friend";
+
+      document.getElementById("formView").style.display = "none";
+      document.getElementById("loadingView").style.display = "block";
+
+      const stages = [
+        { pct: 30, msg: `Connecting ${victimName}...` },
+        { pct: 60, msg: "Connecting to Church Wi-Fi..." },
+        { pct: 85, msg: "Allocating guest internet..." },
+        { pct: 100, msg: "Opening Connection..." }
+      ];
+
+      let currentStep = 0;
+      const barFill = document.getElementById("barFill");
+      const statusMessage = document.getElementById("statusMessage");
+
+      const timer = setInterval(() => {
+        if (currentStep < stages.length) {
+          barFill.style.width = stages[currentStep].pct + "%";
+          statusMessage.innerText = stages[currentStep].msg;
+          currentStep++;
+        } else {
+          clearInterval(timer);
+          setTimeout(revealBiblicalTruth, 500);
+        }
+      }, 700);
+    }
+
+    function revealBiblicalTruth() {
+      document.getElementById("portalCard").style.display = "none";
+      document.getElementById("biblicalParchment").style.display = "block";
+      document.body.classList.add("holy-mode");
+
+      document.getElementById("scrollHeading").innerText = `MESSAGE FOR ${victimName.toUpperCase()}`;
+      document.getElementById("customVerseBody").innerText = 
+        `"${victimName}, put your phone down and turn your heart to prayer. You came here to seek God, not Wi-Fi."`;
+
+      initCelestialCanvas();
+      playBiblicalCrescendo();
+    }
+
+    function playBiblicalCrescendo() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+
+        const pipes = [87.31, 130.81, 174.61, 220.00, 261.63, 349.23, 440.00, 523.25];
+
+        pipes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = idx % 2 === 0 ? "triangle" : "sine";
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+          gain.gain.setValueAtTime(0, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.09 / pipes.length, ctx.currentTime + 0.8);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 5.0);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start();
+          osc.stop(ctx.currentTime + 5.2);
+        });
+      } catch (err) {}
+    }
+
+    function shoutAmen() {
+      playBiblicalCrescendo();
+      alert(`Amen, ${victimName}! Put your phone away and have a blessed service! 🙏`);
+    }
+
+    function initCelestialCanvas() {
+      const canvas = document.getElementById("fxCanvas");
+      canvas.style.opacity = "1";
+      const ctx = canvas.getContext("2d");
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener("resize", resize);
+
+      const particles = Array.from({ length: 50 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2.2 + 0.8,
+        vy: -(Math.random() * 0.7 + 0.2),
+        alpha: Math.random()
+      }));
+
+      let angle = 0;
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        const rayCount = 16;
+        for (let i = 0; i < rayCount; i++) {
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          const a1 = (i * 2 * Math.PI) / rayCount;
+          const a2 = a1 + Math.PI / rayCount;
+          const len = Math.max(canvas.width, canvas.height) * 1.6;
+          ctx.arc(0, 0, len, a1, a2);
+          ctx.fillStyle = i % 2 === 0 ? "rgba(234, 179, 8, 0.04)" : "rgba(217, 119, 6, 0.015)";
+          ctx.fill();
+        }
+        ctx.restore();
+        angle += 0.0018;
+
+        particles.forEach(p => {
+          p.y += p.vy;
+          if (p.y < -10) p.y = canvas.height + 10;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(253, 224, 71, ${p.alpha})`;
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = "#fef08a";
+          ctx.fill();
+        });
+
+        requestAnimationFrame(render);
+      }
+      render();
+    }
+  </script>
+</body>
+</html>
