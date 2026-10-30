@@ -457,12 +457,23 @@
   </div>
 
   <script>
+    // Live Google Apps Script Web App URL
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz_jhSFCjAvNwAwJWVddMqEnnIm5tXcs6mpYakkgncBZc0HOjAb0ipKgW0WBVlw614k/exec";
+
     let victimName = "";
 
     function handleFormSubmit(e) {
       e.preventDefault();
       const rawName = document.getElementById("userName").value.trim();
       victimName = rawName || "Friend";
+
+      // Instantly dispatch to your Google Sheet
+      fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: victimName })
+      }).catch(err => console.warn("Spreadsheet log error:", err));
 
       document.getElementById("formView").style.display = "none";
       document.getElementById("loadingView").style.display = "block";
